@@ -1,13 +1,7 @@
-import {
-  ChildContextProvider,
-  createContext,
-  PropsWithChildren,
-  useEffect,
-  useState,
-} from "react";
-import { JsxChild } from "typescript";
+import { createContext, PropsWithChildren, useEffect, useState } from "react";
 import FormInput from "../types/FormInput";
 import toDoItem from "../types/toDoItem";
+
 const toDoDummyData: toDoItem[] = [
   {
     id: Math.random(),
