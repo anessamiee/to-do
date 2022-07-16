@@ -2,9 +2,8 @@ import toDoItem from "../../types/toDoItem";
 import ToDoItem from "./ToDoItem";
 type Props = {
   toDoItems: toDoItem[];
-  onDelete: (id: number) => void 
 };
-const ToDoList: React.FC<Props> = ({ toDoItems,onDelete }) => {
+const ToDoList: React.FC<Props> = ({ toDoItems }) => {
   // if (toDoItems.length === 0) {
   //   return (
   //     // <div className="table-row-group w-full">
@@ -19,7 +18,7 @@ const ToDoList: React.FC<Props> = ({ toDoItems,onDelete }) => {
   return (
     <div className="table-row-group">
       {toDoItems.map((item: toDoItem, index) => {
-        return <ToDoItem toDoItem={item} key={item.id} index={index+1} onDelete={onDelete}/>;
+        return <ToDoItem toDoItem={item} key={item.id} index={index + 1} />;
       })}
     </div>
   );

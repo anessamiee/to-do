@@ -1,13 +1,18 @@
+import { useContext } from "react";
+import ToDoContext from "../../store/todo-context";
 import toDoItem from "../../types/toDoItem";
 
 type Props = {
   toDoItem: toDoItem;
   index: number;
-  onDelete: (id: number) => void;
 };
-const ToDoItem: React.FC<Props> = ({ toDoItem, index, onDelete }) => {
+const ToDoItem: React.FC<Props> = ({ toDoItem, index }) => {
+  const ctx = useContext(ToDoContext);
+
   const handleDelete = () => {
-    onDelete(toDoItem.id);
+    // onDelete(toDoItem.id);
+
+    ctx.deleteItemHandler(toDoItem.id);
   };
   return (
     <div className="table-row">
