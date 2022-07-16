@@ -49,6 +49,7 @@ const formReducer: Reducer<State, Action> = (state, action) => {
       //     };
       //   }
       // }
+
       return {
         ...state,
         title: { value: action.val, isValid: action.val.trim().length !== 0 },
