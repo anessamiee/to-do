@@ -1,8 +1,6 @@
-import toDoItem from "../../types/toDoItem";
 import ToDoList from "./ToDoList";
 
-type Props = { toDoItems: toDoItem[] };
-const ToDos: React.FC<Props> = ({ toDoItems }) => {
+const ToDos: React.FC = () => {
   return (
     <div className="table w-full border-2 rounded-md m-1 sm:m-4 border-zinc-400 border-separate text-left ">
       <div className="table-row-group">
@@ -22,7 +20,7 @@ const ToDos: React.FC<Props> = ({ toDoItems }) => {
           <div className="table-cell m-1 p-4 border-r- w-3/12  border-zinc-400 "></div>
         </div>
       </div>
-      <ToDoList toDoItems={toDoItems} />
+      <ToDoList />
     </div>
   );
 };

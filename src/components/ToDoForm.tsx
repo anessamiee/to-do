@@ -1,9 +1,6 @@
-import { Reducer, useReducer } from "react";
-import FormInput from "../types/FormInput";
+import { Reducer, useContext, useEffect, useReducer, useState } from "react";
+import ToDoContext from "../store/todo-context";
 
-type Props = {
-  onUpdateList: (newToDo: FormInput) => void;
-};
 const formInitialState = {
   title: { value: "", isValid: null },
   date: { value: "", isValid: null },
@@ -36,59 +33,29 @@ type Action =
 
 const formReducer: Reducer<State, Action> = (state, action) => {
   if (action.type === "USER_INPUT") {
-    if (action.field === FieldType.Title) {
-      // for (const [key, val] of Object.entries(state)) {
-      //   if (key === FieldType.Title) {
-      //     console.log([val.isValid]);
-      //     return {
-      //       ...state,
-      //       [key]: {
-      //         [val.value]: action.val,
-      //         [val.isValid]: action.val.trim().length !== 0,
-      //       },
-      //     };
-      //   }
-      // }
-
-      return {
-        ...state,
-        title: { value: action.val, isValid: action.val.trim().length !== 0 },
-      };
-    } else if (action.field === FieldType.Date) {
-      return {
-        ...state,
-        date: { value: action.val, isValid: action.val.trim().length !== 0 },
-      };
-    } else {
-      return {
-        ...state,
-        description: {
-          value: action.val,
-          isValid: action.val.trim().length !== 0,
-        },
-      };
-    }
+    return {
+      ...state,
+      [action.field]: {
+        value: action.val,
+        isValid: action.val.trim().length !== 0,
+      },
+    };
   }
   if (action.type === "ON_BLUR") {
-    if (action.field === FieldType.Title) {
-      return {
-        ...state,
-        title: { value: state.title.value, isValid: null },
-      };
-    } else if (action.field === FieldType.Date) {
-      return {
-        ...state,
-        date: { value: state.date.value, isValid: null },
-      };
-    } else {
-      return {
-        ...state,
-        description: {
-          value: state.description.value,
-          isValid: null,
-        },
-      };
-    }
+    Object.entries(state).forEach(([key, value]) => {
+      if (key === action.field) {
+        console.log(key);
+        state = {
+          ...state,
+          [key]: {
+            value: value.value,
+            isValid: null,
+          },
+        };
+        return;
+      }
+    });
+    return state;
   }
   if (action.type === "VALIDATE") {
     return {
@@ -107,14 +74,46 @@ const formReducer: Reducer<State, Action> = (state, action) => {
       },
     };
   }
-  return formInitialState;
+  if (action.type === "SUBMIT") {
+    return formInitialState;
+  }
+  return state;
 };
 
-const ToDoForm: React.FC<Props> = ({ onUpdateList }) => {
+const ToDoForm: React.FC = () => {
+  const ctx = useContext(ToDoContext);
+
+  const [formIsValid, setFormIsValid] = useState(false);
   const [formState, dispatchFormState] = useReducer(
     formReducer,
     formInitialState
   );
+
+  // useEffect(() => {
+  //   const identifier = setTimeout(() => {
+  //     console.log("Checking form validity!");
+  //     // dispatchFormState({ type: "VALIDATE" });
+  //     if (
+  //       formState.date.isValid &&
+  //       formState.title.isValid &&
+  //       formState.description.isValid
+  //     )
+  //     {
+  //       // setFormIsValid(true);
+  //       dispatchFormState({ type: "VALIDATE" });
+
+  //     }
+  //   }, 500);
+
+  //   return () => {
+  //     console.log("CLEANUP");
+  //     clearTimeout(identifier);
+  //   };
+  // }, [
+  //   formState.date.isValid,
+  //   formState.title.isValid,
+  //   formState.description.isValid,
+  // ]);
 
   const inputHandler = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -131,19 +130,28 @@ const ToDoForm: React.FC<Props> = ({ onUpdateList }) => {
   ) => {
     const name = e.target.name;
     dispatchFormState({ type: "ON_BLUR", field: name });
-    console.log(formState);
   };
 
   const onFormSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // if (formIsValid) {
+    //   ctx.addItemHandler({
+    //     title: formState.title.value,
+    //     date: formState.date.value,
+    //     description: formState.description.value,
+    //   });
+    //   dispatchFormState({ type: "SUBMIT" });
+    // }
     dispatchFormState({ type: "VALIDATE" });
+    console.log(formState);
     if (
       formState.date.isValid &&
       formState.title.isValid &&
       formState.description.isValid
     ) {
       console.log("valid");
-      onUpdateList({
+      ctx.addItemHandler({
         title: formState.title.value,
         date: formState.date.value,
         description: formState.description.value,
