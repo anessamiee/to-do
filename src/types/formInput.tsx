@@ -1,6 +1,6 @@
-type formInput = {
+type FormInput = {
   title: string;
   description: string;
   date: string;
 };
-export default formInput;
+export default FormInput;
