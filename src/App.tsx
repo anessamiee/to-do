@@ -3,7 +3,7 @@ import { useState } from "react";
 import ToDos from "./components/ToDo/ToDos";
 import toDoItem from "./types/toDoItem";
 import ToDoForm from "./components/ToDoForm";
-import formInput from "./types/formInput";
+import FormInput from "./types/FormInput";
 
 const toDoDummyData: toDoItem[] = [
   {
@@ -21,7 +21,7 @@ const toDoDummyData: toDoItem[] = [
 ];
 function App() {
   const [toDoItems, setToDoItems] = useState<toDoItem[]>(toDoDummyData);
-  const addItemHandler = (newToDoItem: formInput) => {
+  const addItemHandler = (newToDoItem: FormInput) => {
     const newToDo: toDoItem = {
       id: Math.random(),
       title: newToDoItem.title,
@@ -31,12 +31,12 @@ function App() {
     setToDoItems((state) => [...state, newToDo]);
   };
   const deleteItemHandler = (id: number) => {
-    setToDoItems(toDoItems.filter(item => item.id !== id));
+    setToDoItems(toDoItems.filter((item) => item.id !== id));
   };
   return (
     <div className="m-4 sm:mx-32 flex flex-col items-center justify-center gap-4">
       <ToDoForm onUpdateList={addItemHandler} />
-      <ToDos toDoItems={toDoItems} onDelete={deleteItemHandler}/>
+      <ToDos toDoItems={toDoItems} onDelete={deleteItemHandler} />
     </div>
   );
 }
