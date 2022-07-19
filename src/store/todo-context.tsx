@@ -1,5 +1,5 @@
 import { createContext, PropsWithChildren, useEffect, useState } from "react";
-import FormInput from "../types/FormInput";
+import FormInput from "../types/formInput";
 import toDoItem from "../types/toDoItem";
 
 const toDoDummyData: toDoItem[] = [
