@@ -1,5 +1,4 @@
-import { useContext } from "react";
-import ToDoContext from "../../store/todo-context";
+import useToDoList from "../../hooks/useToDoList";
 import toDoItem from "../../types/toDoItem";
 
 type Props = {
@@ -7,10 +6,11 @@ type Props = {
   index: number;
 };
 const ToDoItem: React.FC<Props> = ({ toDoItem, index }) => {
-  const ctx = useContext(ToDoContext);
+  const { deleteToDo } = useToDoList();
   const handleDelete = () => {
-    ctx.deleteItemHandler(toDoItem.id);
+    deleteToDo(toDoItem.id);
   };
+
   return (
     <div className="table-row">
       <div className="table-cell m-1 p-4 border-r-2 border-t-2 border-zinc-400 text-center">
