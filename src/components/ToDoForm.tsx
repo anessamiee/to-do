@@ -1,10 +1,10 @@
-import { Reducer, useContext, useEffect, useReducer, useState } from "react";
+import { Reducer, useContext, useReducer } from "react";
 import ToDoContext from "../store/todo-context";
 
 const formInitialState = {
-  title: { value: "", isValid: null },
-  date: { value: "", isValid: null },
-  description: { value: "", isValid: null },
+  title: { value: "", isValid: false, isTouched: false },
+  date: { value: "", isValid: false, isTouched: false },
+  description: { value: "", isValid: false, isTouched: false },
 };
 enum FieldType {
   Title = "title",
@@ -14,7 +14,8 @@ enum FieldType {
 
 type Input = {
   value: string;
-  isValid: boolean | null;
+  isValid: boolean;
+  isTouched: boolean;
 };
 type State = {
   title: Input;
@@ -33,46 +34,47 @@ type Action =
 
 const formReducer: Reducer<State, Action> = (state, action) => {
   if (action.type === "USER_INPUT") {
-    return {
-      ...state,
-      [action.field]: {
-        value: action.val,
-        isValid: action.val.trim().length !== 0,
-      },
-    };
-  }
-  if (action.type === "ON_BLUR") {
     Object.entries(state).forEach(([key, value]) => {
       if (key === action.field) {
-        console.log(key);
         state = {
           ...state,
           [key]: {
-            value: value.value,
-            isValid: null,
+            value: action.val,
+            isValid: action.val.trim().length !== 0,
+            isTouched: value.isTouched,
           },
         };
-        return;
       }
     });
     return state;
   }
   if (action.type === "VALIDATE") {
-    return {
-      ...state,
-      title: {
-        value: state.title.value,
-        isValid: state.title.value.trim().length !== 0,
-      },
-      date: {
-        value: state.date.value,
-        isValid: state.date.value.trim().length !== 0,
-      },
-      description: {
-        value: state.description.value,
-        isValid: state.description.value.trim().length !== 0,
-      },
-    };
+    Object.entries(state).forEach(([key, value]) => {
+      state = {
+        ...state,
+        [key]: {
+          value: value.value,
+          isValid: value.value.trim().length !== 0,
+          isTouched: true,
+        },
+      };
+    });
+    return state;
+  }
+  if (action.type === "ON_BLUR") {
+    Object.entries(state).forEach(([key, value]) => {
+      if (key === action.field) {
+        state = {
+          ...state,
+          [key]: {
+            value: value.value,
+            isValid: value.isValid,
+            isTouched: false,
+          },
+        };
+      }
+    });
+    return state;
   }
   if (action.type === "SUBMIT") {
     return formInitialState;
@@ -83,37 +85,15 @@ const formReducer: Reducer<State, Action> = (state, action) => {
 const ToDoForm: React.FC = () => {
   const ctx = useContext(ToDoContext);
 
-  const [formIsValid, setFormIsValid] = useState(false);
   const [formState, dispatchFormState] = useReducer(
     formReducer,
     formInitialState
   );
 
-  // useEffect(() => {
-  //   const identifier = setTimeout(() => {
-  //     console.log("Checking form validity!");
-  //     // dispatchFormState({ type: "VALIDATE" });
-  //     if (
-  //       formState.date.isValid &&
-  //       formState.title.isValid &&
-  //       formState.description.isValid
-  //     )
-  //     {
-  //       // setFormIsValid(true);
-  //       dispatchFormState({ type: "VALIDATE" });
-
-  //     }
-  //   }, 500);
-
-  //   return () => {
-  //     console.log("CLEANUP");
-  //     clearTimeout(identifier);
-  //   };
-  // }, [
-  //   formState.date.isValid,
-  //   formState.title.isValid,
-  //   formState.description.isValid,
-  // ]);
+  const titleError = !formState.title.isValid && formState.title.isTouched;
+  const dateError = !formState.date.isValid && formState.date.isTouched;
+  const descriptionError =
+    !formState.description.isValid && formState.description.isTouched;
 
   const inputHandler = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -125,7 +105,7 @@ const ToDoForm: React.FC = () => {
       type: "USER_INPUT",
     });
   };
-  const handleBlur = (
+  const blurHandler = (
     e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const name = e.target.name;
@@ -134,29 +114,20 @@ const ToDoForm: React.FC = () => {
 
   const onFormSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    // if (formIsValid) {
-    //   ctx.addItemHandler({
-    //     title: formState.title.value,
-    //     date: formState.date.value,
-    //     description: formState.description.value,
-    //   });
-    //   dispatchFormState({ type: "SUBMIT" });
-    // }
-    dispatchFormState({ type: "VALIDATE" });
-    console.log(formState);
     if (
-      formState.date.isValid &&
       formState.title.isValid &&
+      formState.date.isValid &&
       formState.description.isValid
     ) {
-      console.log("valid");
-      ctx.addItemHandler({
+      const newToDo = {
         title: formState.title.value,
         date: formState.date.value,
         description: formState.description.value,
-      });
+      };
+      ctx.addItemHandler(newToDo);
       dispatchFormState({ type: "SUBMIT" });
+    } else {
+      dispatchFormState({ type: "VALIDATE" });
     }
   };
   return (
@@ -173,13 +144,9 @@ const ToDoForm: React.FC = () => {
             name="title"
             className={
               "border-2 rounded-md px-3 py-2 " +
-              `${
-                formState.title.isValid === false
-                  ? "border-red-500"
-                  : "border-zinc-400 "
-              }`
+              `${titleError ? "border-red-500" : "border-zinc-400 "}`
             }
-            onBlur={handleBlur}
+            onBlur={blurHandler}
             value={formState.title.value}
             onChange={inputHandler}
           />
@@ -192,13 +159,9 @@ const ToDoForm: React.FC = () => {
             name="date"
             className={
               "border-2 rounded-md px-3 py-2 " +
-              `${
-                formState.date.isValid === false
-                  ? "border-red-500"
-                  : "border-zinc-400 "
-              }`
+              `${dateError ? "border-red-500" : "border-zinc-400 "}`
             }
-            onBlur={handleBlur}
+            onBlur={blurHandler}
             value={formState.date.value}
             onChange={inputHandler}
           />
@@ -213,13 +176,9 @@ const ToDoForm: React.FC = () => {
           rows={5}
           className={
             "border-2 w-full rounded-md px-2 py-1 " +
-            `${
-              formState.description.isValid === false
-                ? "border-red-500"
-                : "border-zinc-400 "
-            }`
+            `${descriptionError ? "border-red-500" : "border-zinc-400 "}`
           }
-          onBlur={handleBlur}
+          onBlur={blurHandler}
           value={formState.description.value}
           onChange={inputHandler}
         ></textarea>
