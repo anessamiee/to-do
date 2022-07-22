@@ -1,5 +1,6 @@
-import { Reducer, useContext, useReducer } from "react";
-import ToDoContext from "../store/todo-context";
+import { Reducer, useReducer } from "react";
+import { useDispatch } from "react-redux";
+import { todoActions } from "../store/todoReducer";
 
 const formInitialState = {
   title: { value: "", isValid: false, isTouched: false },
@@ -83,8 +84,7 @@ const formReducer: Reducer<State, Action> = (state, action) => {
 };
 
 const ToDoForm: React.FC = () => {
-  const ctx = useContext(ToDoContext);
-
+  const dispatch = useDispatch();
   const [formState, dispatchFormState] = useReducer(
     formReducer,
     formInitialState
@@ -124,7 +124,7 @@ const ToDoForm: React.FC = () => {
         date: formState.date.value,
         description: formState.description.value,
       };
-      ctx.addItemHandler(newToDo);
+      dispatch(todoActions.add(newToDo));
       dispatchFormState({ type: "SUBMIT" });
     } else {
       dispatchFormState({ type: "VALIDATE" });

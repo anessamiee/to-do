@@ -1,4 +1,5 @@
-import useToDoList from "../../hooks/useToDoList";
+import { useDispatch } from "react-redux";
+import { todoActions } from "../../store/todoReducer";
 import toDoItem from "../../types/toDoItem";
 
 type Props = {
@@ -6,9 +7,11 @@ type Props = {
   index: number;
 };
 const ToDoItem: React.FC<Props> = ({ toDoItem, index }) => {
-  const { deleteToDo } = useToDoList();
+  const dispatch = useDispatch();
+
   const handleDelete = () => {
-    deleteToDo(toDoItem.id);
+    const remove = todoActions.delete(toDoItem.id);
+    dispatch(remove);
   };
 
   return (
