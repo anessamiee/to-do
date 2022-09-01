@@ -1,64 +1,139 @@
-import { useRef, useState } from "react";
-import formInput from "../types/formInput";
-type Props = {
-  onUpdateList: (newToDo: formInput) => void;
+import { Reducer, useReducer } from "react";
+import { useDispatch } from "react-redux";
+import { todoActions } from "../store/todoReducer";
+
+const formInitialState = {
+  title: { value: "", isValid: false, isTouched: false },
+  date: { value: "", isValid: false, isTouched: false },
+  description: { value: "", isValid: false, isTouched: false },
 };
-const ToDoForm: React.FC<Props> = ({ onUpdateList }) => {
-  const [userTitle, setTitle] = useState("");
-  const [userDate, setDate] = useState("");
-  const [userDescription, setDescription] = useState("");
+enum FieldType {
+  Title = "title",
+  Date = "date",
+  Description = "description",
+}
 
-  const titleRef = useRef<HTMLInputElement>(null);
-  const dateRef = useRef<HTMLInputElement>(null);
-  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+type Input = {
+  value: string;
+  isValid: boolean;
+  isTouched: boolean;
+};
+type State = {
+  title: Input;
+  date: Input;
+  description: Input;
+};
+type Action =
+  | {
+      val: string;
+      field: FieldType | string;
+      type: "USER_INPUT";
+    }
+  | { type: "ON_BLUR"; field: FieldType | string }
+  | { type: "SUBMIT" }
+  | { type: "VALIDATE" };
 
-  const titleHandler = (e: React.FormEvent<HTMLInputElement>) => {
-    titleRef.current?.classList.remove("border-red-500");
-    setTitle(e.currentTarget.value);
-  };
-  const dateHandler = (e: React.FormEvent<HTMLInputElement>) => {
-    dateRef.current?.classList.remove("border-red-500");
+const formReducer: Reducer<State, Action> = (state, action) => {
+  if (action.type === "USER_INPUT") {
+    Object.entries(state).forEach(([key, value]) => {
+      if (key === action.field) {
+        state = {
+          ...state,
+          [key]: {
+            value: action.val,
+            isValid: action.val.trim().length !== 0,
+            isTouched: value.isTouched,
+          },
+        };
+      }
+    });
+    return state;
+  }
+  if (action.type === "VALIDATE") {
+    Object.entries(state).forEach(([key, value]) => {
+      state = {
+        ...state,
+        [key]: {
+          value: value.value,
+          isValid: value.value.trim().length !== 0,
+          isTouched: true,
+        },
+      };
+    });
+    return state;
+  }
+  if (action.type === "ON_BLUR") {
+    Object.entries(state).forEach(([key, value]) => {
+      if (key === action.field) {
+        state = {
+          ...state,
+          [key]: {
+            value: value.value,
+            isValid: value.isValid,
+            isTouched: false,
+          },
+        };
+      }
+    });
+    return state;
+  }
+  if (action.type === "SUBMIT") {
+    return formInitialState;
+  }
+  return state;
+};
 
-    setDate(e.currentTarget.value);
+const ToDoForm: React.FC = () => {
+  const dispatch = useDispatch();
+  const [formState, dispatchFormState] = useReducer(
+    formReducer,
+    formInitialState
+  );
+
+  const titleError = !formState.title.isValid && formState.title.isTouched;
+  const dateError = !formState.date.isValid && formState.date.isTouched;
+  const descriptionError =
+    !formState.description.isValid && formState.description.isTouched;
+
+  const inputHandler = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    dispatchFormState({
+      val: value,
+      field: name,
+      type: "USER_INPUT",
+    });
   };
-  const descriptionHandler = (e: React.FormEvent<HTMLTextAreaElement>) => {
-    descriptionRef.current?.classList.remove("border-red-500");
-    setDescription(e.currentTarget.value);
+  const blurHandler = (
+    e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const name = e.target.name;
+    dispatchFormState({ type: "ON_BLUR", field: name });
   };
-  const submitHandler = (e: React.FormEvent<HTMLFormElement>) => {
+
+  const onFormSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
-      userTitle?.trim().length !== 0 &&
-      userDate?.trim().length !== 0 &&
-      userDescription?.trim().length !== 0
+      formState.title.isValid &&
+      formState.date.isValid &&
+      formState.description.isValid
     ) {
-      const userData: formInput = {
-        title: userTitle,
-        date: userDate,
-        description: userDescription,
+      const newToDo = {
+        title: formState.title.value,
+        date: formState.date.value,
+        description: formState.description.value,
       };
-
-      onUpdateList(userData);
-
-      setTitle("");
-      setDescription("");
-      setDate("");
-    }
-    if (titleRef.current?.value.trim().length === 0) {
-      titleRef.current.classList.add("border-red-500");
-    }
-    if (dateRef.current?.value.trim().length === 0) {
-      dateRef.current.classList.add("border-red-500");
-    }
-    if (descriptionRef.current?.value.trim().length === 0) {
-      descriptionRef.current.classList.add("border-red-500");
+      dispatch(todoActions.add(newToDo));
+      dispatchFormState({ type: "SUBMIT" });
+    } else {
+      dispatchFormState({ type: "VALIDATE" });
     }
   };
-
   return (
     <form
       className="w-full flex flex-col items-center justify-center gap-4"
-      onSubmit={submitHandler}
+      onSubmit={onFormSubmit}
     >
       <section className="flex flex-col sm:flex-row w-full gap-4 sm:gap-0 sm:justify-between">
         <label htmlFor="title" className="flex flex-col">
@@ -66,10 +141,14 @@ const ToDoForm: React.FC<Props> = ({ onUpdateList }) => {
           <input
             type="text"
             id="title"
-            className="border-2 border-zinc-400 rounded-md px-3 py-2"
-            ref={titleRef}
-            value={userTitle}
-            onChange={titleHandler}
+            name="title"
+            className={
+              "border-2 rounded-md px-3 py-2 " +
+              `${titleError ? "border-red-500" : "border-zinc-400 "}`
+            }
+            onBlur={blurHandler}
+            value={formState.title.value}
+            onChange={inputHandler}
           />
         </label>
         <label htmlFor="due-date" className="flex flex-col">
@@ -77,10 +156,14 @@ const ToDoForm: React.FC<Props> = ({ onUpdateList }) => {
           <input
             type="date"
             id="due-date"
-            className="border-2 border-zinc-400 rounded-md px-3 py-2"
-            ref={dateRef}
-            value={userDate}
-            onChange={dateHandler}
+            name="date"
+            className={
+              "border-2 rounded-md px-3 py-2 " +
+              `${dateError ? "border-red-500" : "border-zinc-400 "}`
+            }
+            onBlur={blurHandler}
+            value={formState.date.value}
+            onChange={inputHandler}
           />
         </label>
       </section>
@@ -91,14 +174,18 @@ const ToDoForm: React.FC<Props> = ({ onUpdateList }) => {
           id="description"
           cols={5}
           rows={5}
-          className="border-2 w-full border-zinc-400 rounded-md px-2 py-1"
-          ref={descriptionRef}
-          value={userDescription}
-          onChange={descriptionHandler}
+          className={
+            "border-2 w-full rounded-md px-2 py-1 " +
+            `${descriptionError ? "border-red-500" : "border-zinc-400 "}`
+          }
+          onBlur={blurHandler}
+          value={formState.description.value}
+          onChange={inputHandler}
         ></textarea>
       </label>
       <button
         type="submit"
+        name="submit"
         className="border-2 w-full sm:w-1/4 rounded-md border-zinc-400 px-4 py-2 bg-lime-300 text-zinc-700 hover:bg-lime-400 transition-colors"
       >
         Add

@@ -1,25 +1,14 @@
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 import toDoItem from "../../types/toDoItem";
 import ToDoItem from "./ToDoItem";
-type Props = {
-  toDoItems: toDoItem[];
-  onDelete: (id: number) => void 
-};
-const ToDoList: React.FC<Props> = ({ toDoItems,onDelete }) => {
-  // if (toDoItems.length === 0) {
-  //   return (
-  //     // <div className="table-row-group w-full">
-  //     <div className="table-row-group floar w-full m-1 p-4 align-middle border-r-2 border-t-2 border-zinc-400 text-center">
-  //       <div className="table-row">
-  //         <div className="w-full">No Tasks</div>
-  //       </div>
-  //     </div>
-  //     // </div>
-  //   );
-  // }
+
+const ToDoList: React.FC = () => {
+  const toDoList = useSelector((state: RootState) => state);
   return (
     <div className="table-row-group">
-      {toDoItems.map((item: toDoItem, index) => {
-        return <ToDoItem toDoItem={item} key={item.id} index={index+1} onDelete={onDelete}/>;
+      {toDoList.map((item: toDoItem, index) => {
+        return <ToDoItem toDoItem={item} key={item.id} index={index + 1} />;
       })}
     </div>
   );

@@ -1,14 +1,19 @@
+import { useDispatch } from "react-redux";
+import { todoActions } from "../../store/todoReducer";
 import toDoItem from "../../types/toDoItem";
 
 type Props = {
   toDoItem: toDoItem;
   index: number;
-  onDelete: (id: number) => void;
 };
-const ToDoItem: React.FC<Props> = ({ toDoItem, index, onDelete }) => {
+const ToDoItem: React.FC<Props> = ({ toDoItem, index }) => {
+  const dispatch = useDispatch();
+
   const handleDelete = () => {
-    onDelete(toDoItem.id);
+    const remove = todoActions.delete(toDoItem.id);
+    dispatch(remove);
   };
+
   return (
     <div className="table-row">
       <div className="table-cell m-1 p-4 border-r-2 border-t-2 border-zinc-400 text-center">
